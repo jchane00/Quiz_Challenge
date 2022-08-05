@@ -1,113 +1,107 @@
-const question = document.getElementById("question");
-const choices = Array.from(document.getElementsByClassName("choice-text"));
-const questionCounterText = document.getElementById("questionCounter");
-const scoreText = document.getElementById("score");
+let time = document.getElementById('time').textContent;
+let countdown = 60;
+let answers_container = document.getElementById("outer-container")
+let answers_buttons = Array.from(document.querySelectorAll(".answers-container button"))
+let question_on = 0
 
-let currentQuestion = {};
-let acceptingAnswers = false;
-let score = 0;
-let questionCounter= 0;
-let availableQuestions = [];
+let correct_answers = 0
 
-let questions = [
 
+
+const count = setInterval(() => {
+    if (countdown <= 0) {
+      end_quiz()
+    }
+    document.getElementById('time').textContent = 'Time:' + countdown;
+    countdown--
+},  1000);
+
+
+
+var quizQuestions = [
     {
-        question: "How many calories are in 1 pound of fat?",
-        choice1: "400",
-        choice2: "1500",
-        choice3: "3000",
-        choice4: "3500",
-        answer: 4
+        question: " The condition in an if/else statement is enclosed with _________.",
+        answers: [
+            { name: "1. quotes", selection: false },
+            { name: "2. curly brackets", selection: false },
+            { name: "3. parenthesis", selection: true },
+            {name: " 4. square brackets", selection: false}
+        ]
     },
     {
-        question: "How many calories are in 1 pound of muscle?",
-        choice1: "900",
-        choice2: "2500",
-        choice3: "5000",
-        choice4: "3500",
-        answer: 2
+        question: "Arrays in Javascript can be used to store_________.",
+        answers: [
+            { name: "1. numbers and strings", selection: false },
+            { name: "2. other arrays", selection: false },
+            { name: "3. booleans", selection: false },
+            { name: "4. all of the above", selection: true }
+        ]
     },
-    {
-        question: "How much water is an adult male's body contain?",
-        choice1: "60%",
-        choice2: "50%",
-        choice3: "10%",
-        choice4: "25%",
-        answer: 1
+       {
+        question: "String values must be enclosed within_________ when being assigned to variables",
+        answers: [
+            { name: "1. commas", selection: false },
+            { name: "2. curly brackets", selection: false },
+            { name: "3. quotes", selection: true },
+            { name: "4. parenthesis", selection: false }
+        ]
     },
-    {
-        question: "How many bones are in the body?",
-        choice1: "60",
-        choice2: "100",
-        choice3: "206",
-        choice4: "500",
-        answer: 3
-    },
+       {
+           question: "A very useful tool used during development and debugging for printing content to the debugger is:",
+        answers: [
+            { name: "1. JavaScript", selection: false },
+            { name: "2. terminal/bash", selection: false },
+            { name: "3. for loops", selection: false },
+            { name: "4. console.log", selection:true }
+        ]
+
+       }
+
     ];
-    
-    //CONSTANTS
-    const CORRECT_BONUS = 10;
-    const MAX_QUESTIONS = 4;
 
-    startGame = () => {
-        questionCounter = 0;
-        score = 0;
-        availableQuestions = [...questions];
-        getNewQuestion();
-    };
+const question = document.getElementById("question")
 
-getNewQuestion = () => {
-    if (availableQuestions.length === 0 || questionCounter >= MAX_QUESTIONS){
-        localStorage.setItem("mostRecentScore",score);
-        return window.location.assign("end.html");
+function run_questions(question_list){
+  let question_current = question_list[question_on]
+  question.innerHTML = question_current.question
+  let questions = 0
+  for(let button of answers_buttons){
+    button.innerHTML = question_current.answers[questions].name
+    button.dataset.correct = question_current.answers[questions++].selection
+  }
+}
+
+
+
+function end_quiz(){
+  clearInterval(count)
+  localStorage.setItem("our_quiz_score_current", correct_answers)
+  question.innerHTML = "Complete! You got " + correct_answers + " of " + quizQuestions.length
+  answers_container.remove()
+  window.location.assign("./highscores.html")
+}
+
+/*
+correct_answers = correct_answers - 1
+correct_answers -= 10
+correct_answers--
+*/
+
+for(let button of answers_buttons){
+  button.addEventListener("click", function(event){
+    if (event.target.dataset.correct === "true"){
+      correct_answers++
     }
-    questionCounter++;
-    questionCounterText.innerText = questionCounter + "/" + MAX_QUESTIONS;
-
-    const questionIndex = Math.floor(Math.random() * availableQuestions.length);
-    currentQuestion = availableQuestions[questionIndex];
-    question.innerText = currentQuestion.question;
-
-
-    choices.forEach( choice => {
-        const number= choice.dataset['number'];
-        choice.innerText = currentQuestion["choice"+ number];
-    });
-
-    availableQuestions.splice(questionIndex, 1);
-    acceptingAnswers = true;
-};  
-
-choices.forEach(choice => {
-    choice.addEventListener("click", e =>{
-        if (!acceptingAnswers) return;
-
-
-        acceptingAnswers = false;
-        const selectedChoice = e.target;
-        const selectedAnswer = selectedChoice.dataset["number"];
-
-        const classToApply = 
-        selectedAnswer == currentQuestion.answer ? "correct" : "incorrect";
-
-        if (classToApply === "correct") {
-            incrementScore(CORRECT_BONUS);
+    else{
+countdown -=5
     }
-        selectedChoice.parentElement.classList.add(classToApply);
-
-
-        setTimeout(() => {
-          selectedChoice.parentElement.classList.remove(classToApply); 
-           getNewQuestion();
-        }, 1000);    
-       
-    });
-});
-
-incrementScore = num => {
-    score += num;
-    scoreText.innerText = score;
-};
-    startGame();
-
-
+      
+    if(quizQuestions.length - 1 > question_on){
+      question_on += 1
+      run_questions(quizQuestions)
+    }
+    else
+      end_quiz()
+  })
+}
+run_questions(quizQuestions)
